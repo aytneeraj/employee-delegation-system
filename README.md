@@ -101,123 +101,137 @@ employee-delegation-system/
 
 ---
 
-## 4. Prerequisites
+## 4. Local Execution & Terminal Guide (Windows PowerShell)
 
-Verify installed tools using PowerShell:
-```powershell
-python --version   # Python 3.11+
-node --version     # Node.js 18+
-npm --version      # npm 9+
-```
+> [!IMPORTANT]
+> **Terminal Directory Awareness:**
+> Pay close attention to your current working directory in PowerShell. Do **not** run `cd backend` if your terminal prompt is already inside `backend`.
+> - Check your prompt path with `pwd` or `(Get-Location).Path`.
+> - If you are at `c:\...\employee-delegation-system`, navigate using `cd backend`.
+> - If you are already at `c:\...\employee-delegation-system\backend`, stay in place and execute the commands directly.
 
 ---
 
 ## 5. Local Setup Instructions
 
-### Step 1: Backend Virtual Environment & Dependencies
+### Terminal 1: Backend Server (FastAPI & MySQL)
 
-From the repository root:
+#### Option 1: From the Project Root (`employee-delegation-system/`)
 ```powershell
-# Navigate to backend
-cd backend
+# 1. Activate existing virtual environment
+.\backend\.venv\Scripts\Activate.ps1
 
-# Create virtual environment
-py -3.11 -m venv .venv
+# 2. Set PYTHONPATH to backend directory
+$env:PYTHONPATH="backend"
 
-# Activate virtual environment
+# 3. (Optional) Run Alembic migrations
+.\backend\.venv\Scripts\alembic.exe -c backend/alembic.ini upgrade head
+
+# 4. (Optional) Synchronize/Seed demo accounts with DEMO_ACCOUNT_PASSWORD
+.\backend\.venv\Scripts\python.exe -m app.db.seed
+
+# 5. Start the FastAPI development server with hot reload
+.\backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload
+```
+
+#### Option 2: From the Backend Directory (`employee-delegation-system\backend/`)
+```powershell
+# 1. Ensure you are inside the backend folder
+cd backend  # Run only if currently at project root!
+
+# 2. Activate virtual environment
 .\.venv\Scripts\Activate.ps1
 
-# Upgrade pip and install dependencies
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Step 2: Database Configuration
-
-#### Option A: Local MySQL 8 Server (Default Production Setup)
-1. Ensure your local MySQL 8 service is running (`MySQL80`).
-2. Run the initialization script in MySQL Workbench or via CLI:
-   ```powershell
-   & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p < ..\database\init.sql
-   ```
-3. Update `backend/.env` with your local MySQL password:
-   ```env
-   DATABASE_URL=mysql+pymysql://root:YOUR_ACTUAL_PASSWORD@localhost:3306/employee_delegation_db
-   ```
-
-#### Option B: Automatic Dev Fallback
-If MySQL credentials are not yet configured, the system automatically uses `SQLITE_FALLBACK=true` (storing development data in `backend/employee_delegation_dev.db`), ensuring immediate local testing without blockers.
-
-### Step 3: Run Database Migrations
-
-Apply Alembic migrations to generate and sync all tables:
-```powershell
-cd backend
+# 3. (Optional) Run Alembic migrations
 .\.venv\Scripts\alembic.exe upgrade head
-```
 
-### Step 4: Seed Initial Data
+# 4. (Optional) Synchronize/Seed demo accounts with DEMO_ACCOUNT_PASSWORD
+.\.venv\Scripts\python.exe -m app.db.seed
 
-Populate default corporate departments, initial users across all roles, projects, and sample delegation workflows:
-```powershell
-$env:PYTHONPATH="backend"
-.\.venv\Scripts\python.exe -c "from app.db.session import SessionLocal; from app.db.seed import seed_database; db = SessionLocal(); seed_database(db); db.close()"
-```
-
-### Step 5: Start Backend API Server
-
-```powershell
-cd backend
-$env:PYTHONPATH="."
+# 5. Start the FastAPI development server with hot reload
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-Interactive API documentation will be available at:
+
+Interactive API documentation and endpoints:
+- **Root Service Info:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 - **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 - **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+- **Health Check:** [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
 
 ---
 
-## 6. Frontend Setup & Execution
+### Terminal 2: Frontend Client (React & Vite)
 
-Open a separate PowerShell terminal:
+#### From the Project Root (`employee-delegation-system/`)
 ```powershell
-# Navigate to frontend
+# Navigate to frontend (only if at project root)
 cd frontend
-
-# Install dependencies (already prepared)
-npm install
 
 # Start Vite development server
 npm run dev
 ```
-Open your browser at: **[http://localhost:5173](http://localhost:5173)**
+
+The frontend application will be live at: **[http://localhost:5173](http://localhost:5173)**.  
+Requests to `/api/*` are automatically proxied to the backend at `http://127.0.0.1:8000`.
 
 ---
 
-## 7. Demo Accounts & Initial Access
+## 6. Database Configuration (MySQL 8.0)
 
-The initial database seed provides the following accounts for immediate testing:
+The backend connects directly to MySQL 8.0 running locally on port 3306.
 
-| Role | Email | Password | Purpose |
+1. Ensure the Windows MySQL service is active:
+   ```powershell
+   Get-Service MySQL80
+   ```
+2. Configuration in `backend/.env`:
+   ```env
+   DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/employee_delegation_db
+   SQLITE_FALLBACK=false
+   DEMO_ACCOUNT_PASSWORD=Password@123
+   ```
+3. To verify the live MySQL connection:
+   ```powershell
+   $env:PYTHONPATH="backend"
+   .\backend\.venv\Scripts\python.exe -c "from app.db.session import engine; from sqlalchemy import text; conn = engine.connect(); print(conn.execute(text('SELECT VERSION(), DATABASE();')).fetchall()); conn.close()"
+   ```
+
+---
+
+## 7. Development Demo Accounts
+
+All demo accounts use the unified development password configured via `DEMO_ACCOUNT_PASSWORD` in `backend/.env`:  
+**Default Password:** `Password@123`
+
+| Role | Email | Password | Designation / Department |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@company.com` | `AdminPassword@123` | System admin, creates/deactivates employees, company analytics |
-| **Manager** | `manager@company.com` | `ManagerPassword@123` | Engineering Manager, assigns tasks, reviews deliverables |
-| **Manager (UI/UX)** | `sarah.design@company.com` | `SarahPassword@123` | Design Lead, projects and department task monitoring |
-| **Employee (Frontend)** | `alex.dev@company.com` | `AlexPassword@123` | Senior Frontend Dev, delegates to peers, submits work |
-| **Employee (Backend)** | `david.backend@company.com` | `DavidPassword@123` | Senior Backend Dev, receives delegations, posts updates |
-| **Employee (QA)** | `priya.qa@company.com` | `PriyaPassword@123` | QA Engineer, accepts task hand-offs |
+| **Admin** | `admin@company.com` | `Password@123` | System Administrator / Project Management |
+| **Manager** | `manager@company.com` | `Password@123` | Engineering Manager / Backend Development |
+| **Manager** | `sarah.design@company.com` | `Password@123` | Lead UI/UX Designer / UI/UX Design |
+| **Employee** | `alex.dev@company.com` | `Password@123` | Senior Frontend Engineer / Frontend Development |
+| **Employee** | `david.backend@company.com` | `Password@123` | Senior Backend Engineer / Backend Development |
+| **Employee** | `priya.qa@company.com` | `Password@123` | QA Automation Engineer / Quality Assurance |
+| **Employee** | `elena.ai@company.com` | `Password@123` | AI/ML Engineer / AI/ML Development |
 
 > [!TIP]
-> The login page includes convenient **1-click quick login buttons** for each role to facilitate pair-testing between assignees and delegators.
+> The login page at `http://localhost:5173/login` includes quick-prefill buttons for Admin, Manager, Frontend Dev, and Backend Dev roles. Clicking a role automatically loads its email address, ready for sign-in with `Password@123`.
 
 ---
 
 ## 8. Running Automated Tests
 
-Run the comprehensive pytest test suite covering authentication, permissions, task delegation, status transitions, and audit trail preservation:
+Run the complete test suite (20 tests covering authentication, JSON and OAuth2 login, state machine transitions, delegation history, and RBAC):
+
+#### From Project Root:
 ```powershell
-cd backend
+$env:PYTHONPATH="backend"
+.\backend\.venv\Scripts\pytest.exe -v
+```
+
+#### From `backend/` directory:
+```powershell
 $env:PYTHONPATH="."
 .\.venv\Scripts\pytest.exe -v
 ```
-All tests run against an isolated in-memory test database with 100% pass rate.
+
+# employee-delegation-system
