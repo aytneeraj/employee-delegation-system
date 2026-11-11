@@ -1,6 +1,8 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.api.deps import get_db, get_current_user
 from app.core.config import settings
 from app.core.security import verify_password, get_password_hash, create_access_token
@@ -11,11 +13,65 @@ from app.schemas.user import UserResponse, UserProfileUpdate
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=dict)
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
-    """Authenticate user with email and password, returning a JWT token and user profile."""
-    user = db.query(User).filter(User.email == login_data.email).first()
-    if not user or not verify_password(login_data.password, user.hashed_password):
+@router.post(
+    "/login",
+    response_model=dict,
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "schema": LoginRequest.model_json_schema()
+                },
+                "application/x-www-form-urlencoded": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "username": {"type": "string", "description": "Email or username"},
+                            "password": {"type": "string", "description": "Password"}
+                        },
+                        "required": ["username", "password"]
+                    }
+                }
+            }
+        }
+    }
+)
+async def login(request: Request, db: Session = Depends(get_db)):
+    """
+    Authenticate user via JSON body ({email, password}) or OAuth2 form data ({username, password}).
+    Returns a JWT access token and the authenticated user's profile.
+    """
+    email = None
+    password = None
+
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            email = body.get("email") or body.get("username")
+            password = body.get("password")
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid JSON payload."
+            )
+    else:
+        try:
+            form = await request.form()
+            email = form.get("username") or form.get("email")
+            password = form.get("password")
+        except Exception:
+            pass
+
+    if not email or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Both email and password are required."
+        )
+
+    clean_email = str(email).strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
+    if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
@@ -35,6 +91,31 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user": UserResponse.model_validate(user)
     }
+
+
+@router.post("/token", response_model=Token)
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    """OAuth2 standard token endpoint for OAuth2 form credentials."""
+    clean_email = form_data.username.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == clean_email).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Please contact an administrator."
+        )
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(subject=user.id, expires_delta=access_token_expires)
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @router.post("/logout")
@@ -87,3 +168,4 @@ def change_password(
     current_user.hashed_password = get_password_hash(pwd_data.new_password)
     db.commit()
     return {"message": "Password updated successfully."}
+

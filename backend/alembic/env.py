@@ -23,8 +23,8 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 db_url = settings.DATABASE_URL
-if "YOUR_PASSWORD_HERE" in db_url:
-    # Use SQLite fallback path for local migrations
+if "YOUR_PASSWORD_HERE" in db_url and settings.SQLITE_FALLBACK:
+    # Use SQLite fallback path only if enabled
     sqlite_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), settings.SQLITE_DB_PATH)
     db_url = f"sqlite:///{sqlite_path}"
 

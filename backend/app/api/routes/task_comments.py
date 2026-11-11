@@ -41,3 +41,4 @@ def add_task_comment(
         comment_text=comment_in.comment_text.strip(),
         user=current_user
     )
+

@@ -44,3 +44,4 @@ def mark_all_read(
     """Mark all notifications for current user as read."""
     count = NotificationService.mark_all_as_read(db, current_user.id)
     return {"message": f"Marked {count} notifications as read."}
+

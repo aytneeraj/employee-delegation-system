@@ -16,3 +16,4 @@ class Department(Base):
 
     # Relationships
     users = relationship("User", back_populates="department")
+

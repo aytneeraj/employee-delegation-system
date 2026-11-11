@@ -72,3 +72,4 @@ class TaskDetailResponse(TaskResponse):
     comments: List[TaskCommentResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+

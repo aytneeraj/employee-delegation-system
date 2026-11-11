@@ -56,3 +56,4 @@ export const StatCard = ({ title, value, icon: Icon, change, trend = 'up', color
     </div>
   );
 };
+

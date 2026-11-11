@@ -144,3 +144,4 @@ export const TaskDelegateModal = ({ isOpen, onClose, task, onTaskDelegated }) =>
     </Modal>
   );
 };
+

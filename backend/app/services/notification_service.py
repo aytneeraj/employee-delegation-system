@@ -71,3 +71,4 @@ class NotificationService:
         )
         db.commit()
         return count
+

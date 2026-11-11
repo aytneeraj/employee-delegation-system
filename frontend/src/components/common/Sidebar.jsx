@@ -165,3 +165,4 @@ export const Sidebar = ({ isOpen, onClose, onOpenCreateTask }) => {
     </>
   );
 };
+

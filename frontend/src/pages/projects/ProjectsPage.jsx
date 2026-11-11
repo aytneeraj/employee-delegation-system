@@ -13,6 +13,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Edit2,
 } from 'lucide-react';
 
 export const ProjectsPage = () => {
@@ -36,6 +37,20 @@ export const ProjectsPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Edit Project Modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProj, setEditingProj] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    manager_id: '',
+    status: 'active',
+    start_date: '',
+    end_date: '',
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState('');
 
   const fetchProjects = async () => {
     try {
@@ -87,6 +102,46 @@ export const ProjectsPage = () => {
       setError(err.response?.data?.detail || 'Failed to create project.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleOpenEdit = (proj) => {
+    setEditingProj(proj);
+    setEditFormData({
+      name: proj.name || '',
+      description: proj.description || '',
+      manager_id: proj.manager_id || '',
+      status: proj.status || 'active',
+      start_date: proj.start_date || '',
+      end_date: proj.end_date || '',
+    });
+    setEditError('');
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateProject = async (e) => {
+    e.preventDefault();
+    if (!editingProj) return;
+    try {
+      setEditSubmitting(true);
+      setEditError('');
+      const payload = {
+        name: editFormData.name.trim(),
+        description: editFormData.description.trim(),
+        manager_id: editFormData.manager_id ? parseInt(editFormData.manager_id) : null,
+        status: editFormData.status,
+        start_date: editFormData.start_date || null,
+        end_date: editFormData.end_date || null,
+      };
+      await projectService.updateProject(editingProj.id, payload);
+      setEditModalOpen(false);
+      setEditingProj(null);
+      fetchProjects();
+    } catch (err) {
+      console.error('Failed to update project:', err);
+      setEditError(err.response?.data?.detail || 'Failed to update project.');
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -160,6 +215,7 @@ export const ProjectsPage = () => {
           <option value="planning">Planning</option>
           <option value="on_hold">On Hold</option>
           <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -180,9 +236,20 @@ export const ProjectsPage = () => {
                   <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
                     {p.code}
                   </span>
-                  <span className="capitalize text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {p.status}
-                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="capitalize text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      {p.status}
+                    </span>
+                    {(isAdmin || isManager) && (
+                      <button
+                        onClick={() => handleOpenEdit(p)}
+                        className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                        title="Edit Project Details"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <h3 className="text-base font-bold text-slate-900 mt-1">{p.name}</h3>
@@ -302,6 +369,122 @@ export const ProjectsPage = () => {
               className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
             >
               {submitting ? 'Creating...' : 'Create Project'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Project Modal */}
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title={`Edit Project: ${editingProj?.name}`} maxWidth="max-w-lg">
+        {editError && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+            {editError}
+          </div>
+        )}
+
+        <form onSubmit={handleUpdateProject} className="space-y-3.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Project Code</label>
+              <input
+                type="text"
+                disabled
+                value={editingProj?.code || ''}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Project Name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+            <textarea
+              rows={3}
+              value={editFormData.description}
+              onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Project Manager</label>
+              <select
+                value={editFormData.manager_id}
+                onChange={(e) => setEditFormData({ ...editFormData, manager_id: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 bg-white"
+              >
+                <option value="">Select Manager...</option>
+                {managers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name} ({m.designation})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+              <select
+                value={editFormData.status}
+                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 bg-white"
+              >
+                <option value="active">Active</option>
+                <option value="planning">Planning</option>
+                <option value="on_hold">On Hold</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={editFormData.start_date}
+                onChange={(e) => setEditFormData({ ...editFormData, start_date: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">End Date</label>
+              <input
+                type="date"
+                value={editFormData.end_date}
+                onChange={(e) => setEditFormData({ ...editFormData, end_date: e.target.value })}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setEditModalOpen(false)}
+              className="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editSubmitting}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+            >
+              {editSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

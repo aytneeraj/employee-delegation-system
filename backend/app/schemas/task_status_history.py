@@ -15,3 +15,4 @@ class TaskStatusHistoryResponse(BaseModel):
     changed_by: Optional[UserBrief] = None
 
     model_config = ConfigDict(from_attributes=True)
+

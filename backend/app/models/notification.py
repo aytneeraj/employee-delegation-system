@@ -19,3 +19,4 @@ class Notification(Base):
     # Relationships
     user = relationship("User", back_populates="notifications")
     task = relationship("Task", back_populates="notifications")
+

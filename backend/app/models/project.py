@@ -30,3 +30,4 @@ class Project(Base):
     # Relationships
     manager = relationship("User", foreign_keys=[manager_id])
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+

@@ -55,3 +55,4 @@ def get_task_reports(
         "priority_distribution": admin_dash.priority_distribution,
         "status_distribution": admin_dash.status_distribution
     }
+

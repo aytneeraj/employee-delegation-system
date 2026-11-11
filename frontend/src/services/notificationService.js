@@ -16,3 +16,4 @@ export const notificationService = {
     return response.data;
   },
 };
+

@@ -16,3 +16,4 @@ class TaskComment(Base):
     # Relationships
     task = relationship("Task", back_populates="comments")
     user = relationship("User", back_populates="task_comments")
+

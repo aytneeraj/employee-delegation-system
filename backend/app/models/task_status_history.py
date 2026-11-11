@@ -18,3 +18,4 @@ class TaskStatusHistory(Base):
     # Relationships
     task = relationship("Task", back_populates="status_history")
     changed_by = relationship("User", foreign_keys=[changed_by_id])
+

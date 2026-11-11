@@ -91,3 +91,4 @@ def second_employee_headers(db):
     emp = db.query(User).filter(User.email == "david.backend@company.com").first()
     token = create_access_token(subject=emp.id)
     return {"Authorization": f"Bearer {token}"}
+

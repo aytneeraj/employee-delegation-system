@@ -42,3 +42,4 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     task_comments = relationship("TaskComment", back_populates="user", cascade="all, delete-orphan")
     task_updates = relationship("TaskUpdate", back_populates="user", cascade="all, delete-orphan")
+

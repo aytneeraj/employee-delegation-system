@@ -17,3 +17,4 @@ class TaskCommentResponse(BaseModel):
     user: Optional[UserBrief] = None
 
     model_config = ConfigDict(from_attributes=True)
+

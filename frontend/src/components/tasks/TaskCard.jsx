@@ -129,3 +129,4 @@ export const TaskCard = ({ task, onOpenDelegate, onOpenStatus }) => {
     </div>
   );
 };
+

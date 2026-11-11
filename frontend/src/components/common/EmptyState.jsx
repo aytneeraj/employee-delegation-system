@@ -13,3 +13,4 @@ export const EmptyState = ({ title = 'No items found', description = 'There are 
     </div>
   );
 };
+

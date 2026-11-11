@@ -280,7 +280,8 @@ def get_task_assignment_history(
     assignments = (
         db.query(TaskAssignment)
         .filter(TaskAssignment.task_id == task_id)
-        .order_by(desc(TaskAssignment.assigned_at))
+        .order_by(desc(TaskAssignment.assigned_at), desc(TaskAssignment.id))
         .all()
     )
     return assignments
+

@@ -41,3 +41,4 @@ def add_task_update(
         progress_percentage=update_in.progress_percentage,
         user=current_user
     )
+

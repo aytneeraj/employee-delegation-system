@@ -163,3 +163,4 @@ def toggle_user_status(
     db.commit()
     db.refresh(user)
     return user
+

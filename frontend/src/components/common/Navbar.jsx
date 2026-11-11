@@ -197,3 +197,4 @@ export const Navbar = ({ onToggleSidebar }) => {
     </header>
   );
 };
+

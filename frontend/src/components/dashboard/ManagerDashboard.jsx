@@ -131,3 +131,4 @@ export const ManagerDashboard = ({ data }) => {
     </div>
   );
 };
+

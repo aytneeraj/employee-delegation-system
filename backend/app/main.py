@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
-from app.db.seed import seed_database
+from app.db.seed import seed_database, sync_demo_accounts
 from app.api.api import api_router
 
 # Configure logging
@@ -24,10 +24,11 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
         logger.info("[Startup] Database tables verified.")
         
-        # Seed initial data
+        # Seed initial data and sync demo credentials
         db = SessionLocal()
         try:
             seed_database(db)
+            sync_demo_accounts(db)
         finally:
             db.close()
     except Exception as e:
@@ -62,6 +63,18 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
+@app.get("/", tags=["Root"])
+def root():
+    """Root endpoint providing service metadata, documentation links, and health status."""
+    return {
+        "app_name": settings.APP_NAME,
+        "status": "running",
+        "api_version": "v1",
+        "docs_url": "/docs",
+        "health_check": "/api/health",
+    }
+
+
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """Health check endpoint to verify backend status."""
@@ -76,3 +89,4 @@ def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
+

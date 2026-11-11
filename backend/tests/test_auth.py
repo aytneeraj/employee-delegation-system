@@ -1,7 +1,10 @@
+from app.core.config import settings
+
+
 def test_login_success(client):
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "admin@company.com", "password": "AdminPassword@123"}
+        json={"email": "admin@company.com", "password": settings.DEMO_ACCOUNT_PASSWORD}
     )
     assert response.status_code == 200
     data = response.json()
@@ -9,6 +12,47 @@ def test_login_success(client):
     assert data["token_type"] == "bearer"
     assert data["user"]["email"] == "admin@company.com"
     assert data["user"]["role"] == "admin"
+
+
+def test_login_form_data_success(client):
+    response = client.post(
+        "/api/v1/auth/login",
+        data={"username": "admin@company.com", "password": settings.DEMO_ACCOUNT_PASSWORD}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_login_case_and_whitespace_insensitive(client):
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "  ADMIN@Company.Com  ", "password": settings.DEMO_ACCOUNT_PASSWORD}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["user"]["email"] == "admin@company.com"
+
+
+def test_oauth2_token_endpoint(client):
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "manager@company.com", "password": settings.DEMO_ACCOUNT_PASSWORD}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_root_endpoint(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "running"
+    assert data["docs_url"] == "/docs"
+    assert data["health_check"] == "/api/health"
 
 
 def test_login_invalid_password(client):
@@ -39,3 +83,5 @@ def test_get_me(client, employee_headers):
 def test_unauthenticated_request(client):
     response = client.get("/api/v1/auth/me")
     assert response.status_code == 401
+
+

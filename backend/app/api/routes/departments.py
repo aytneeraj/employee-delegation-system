@@ -39,3 +39,4 @@ def create_department(
     db.commit()
     db.refresh(dept)
     return dept
+

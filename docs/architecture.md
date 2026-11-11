@@ -63,3 +63,4 @@ When an employee delegates task $T$ to another employee:
 5. Update `tasks` row: `current_assignee_id = new_assignee`, `delegated_by_id = current_user_id`, `status = 'assigned'`.
 6. Record entry in `task_status_history`.
 7. Dispatch in-app notification to the new assignee.
+

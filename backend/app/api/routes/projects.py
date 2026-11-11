@@ -91,3 +91,4 @@ def update_project(
     db.commit()
     db.refresh(project)
     return project
+

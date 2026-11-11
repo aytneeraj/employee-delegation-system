@@ -70,3 +70,4 @@ class UserResponse(UserBase):
     reporting_manager: Optional[UserBrief] = None
 
     model_config = ConfigDict(from_attributes=True)
+

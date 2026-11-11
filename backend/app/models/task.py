@@ -48,8 +48,9 @@ class Task(Base):
     delegated_by = relationship("User", foreign_keys=[delegated_by_id], back_populates="delegated_tasks")
 
     # History and Activity relationships
-    assignments = relationship("TaskAssignment", back_populates="task", cascade="all, delete-orphan", order_by="desc(TaskAssignment.assigned_at)")
+    assignments = relationship("TaskAssignment", back_populates="task", cascade="all, delete-orphan", order_by="desc(TaskAssignment.assigned_at), desc(TaskAssignment.id)")
     status_history = relationship("TaskStatusHistory", back_populates="task", cascade="all, delete-orphan", order_by="desc(TaskStatusHistory.created_at)")
     updates = relationship("TaskUpdate", back_populates="task", cascade="all, delete-orphan", order_by="desc(TaskUpdate.created_at)")
     comments = relationship("TaskComment", back_populates="task", cascade="all, delete-orphan", order_by="TaskComment.created_at")
     notifications = relationship("Notification", back_populates="task", cascade="all, delete-orphan")
+

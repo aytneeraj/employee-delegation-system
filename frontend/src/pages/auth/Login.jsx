@@ -29,9 +29,8 @@ export const Login = () => {
     }
   };
 
-  const handleQuickLogin = (demoEmail, demoPassword) => {
+  const handleQuickSelectEmail = (demoEmail) => {
     setEmail(demoEmail);
-    setPassword(demoPassword);
     setError('');
   };
 
@@ -106,58 +105,66 @@ export const Login = () => {
             </button>
           </form>
 
-          {/* Quick Demo Accounts for Seamless Testing */}
+          {/* Quick Demo Accounts for Local Testing */}
           <div className="mt-6 pt-5 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
-              Instant Demo Access
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Prefill Demo Account
+              </p>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono">
+                Password@123
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 mb-3">
+              Click a role below to load the email. The unified development password is <code className="text-indigo-600 font-semibold">Password@123</code> (configured via DEMO_ACCOUNT_PASSWORD in backend/.env).
             </p>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin@company.com', 'AdminPassword@123')}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-left transition-colors"
+                onClick={() => handleQuickSelectEmail('admin@company.com')}
+                className="p-2.5 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-left transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-1.5 text-rose-700 font-bold">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Admin Role</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">admin@company.com</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate group-hover:text-rose-600">admin@company.com</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('manager@company.com', 'ManagerPassword@123')}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-left transition-colors"
+                onClick={() => handleQuickSelectEmail('manager@company.com')}
+                className="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-left transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-1.5 text-indigo-700 font-bold">
                   <Briefcase className="w-3.5 h-3.5" />
                   <span>Manager Role</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">manager@company.com</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate group-hover:text-indigo-600">manager@company.com</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('alex.dev@company.com', 'AlexPassword@123')}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-left transition-colors"
+                onClick={() => handleQuickSelectEmail('alex.dev@company.com')}
+                className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-left transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-1.5 text-emerald-700 font-bold">
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>Frontend Dev</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">alex.dev@company.com</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate group-hover:text-emerald-600">alex.dev@company.com</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('david.backend@company.com', 'DavidPassword@123')}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-left transition-colors"
+                onClick={() => handleQuickSelectEmail('david.backend@company.com')}
+                className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-left transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-1.5 text-blue-700 font-bold">
                   <UserCheck className="w-3.5 h-3.5" />
                   <span>Backend Dev</span>
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">david.backend@company.com</p>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate group-hover:text-blue-600">david.backend@company.com</p>
               </button>
             </div>
           </div>
@@ -166,3 +173,4 @@ export const Login = () => {
     </div>
   );
 };
+

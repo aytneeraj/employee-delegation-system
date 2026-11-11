@@ -101,3 +101,4 @@ export const TaskTimeline = ({ assignments = [], statusHistory = [] }) => {
     </div>
   );
 };
+

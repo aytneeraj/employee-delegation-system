@@ -59,3 +59,4 @@ In this system, task delegation is not merely a replacement of the `assigned_to`
   - `Manager`: Can assign to team members or peers.
   - `Employee`: Can delegate tasks assigned to them to another active employee with a documented reason.
 - **Review Authority**: Only the delegator who assigned the task (or a manager/admin) can approve submission or request revisions.
+

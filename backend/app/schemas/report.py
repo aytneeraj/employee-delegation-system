@@ -77,3 +77,4 @@ class EmployeeDashboardResponse(BaseModel):
     recent_assigned_tasks: List[Any]
     upcoming_deadlines: List[Any]
     recent_notifications: List[Any]
+

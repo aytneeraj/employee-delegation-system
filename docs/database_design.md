@@ -104,3 +104,4 @@
 - `type`: VARCHAR(50) NOT NULL
 - `is_read`: BOOLEAN DEFAULT FALSE (Indexed)
 - `created_at`: DATETIME DEFAULT CURRENT_TIMESTAMP
+

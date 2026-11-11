@@ -331,3 +331,4 @@ class ReportService:
                 for t in upcoming_tasks
             ],
         }
+

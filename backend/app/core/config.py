@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "default_secret_key_change_me_in_production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    DEMO_ACCOUNT_PASSWORD: str = "Password@123"
     
     # Database
     DATABASE_URL: str = "mysql+pymysql://root:YOUR_PASSWORD_HERE@localhost:3306/employee_delegation_db"
@@ -45,3 +46,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

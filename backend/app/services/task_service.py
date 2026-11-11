@@ -377,3 +377,4 @@ class TaskService:
             )
 
         return comment
+

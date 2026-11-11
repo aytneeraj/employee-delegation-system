@@ -1,6 +1,8 @@
 import logging
 from datetime import date, datetime, timedelta
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models.department import Department
 from app.models.user import User, UserRole
@@ -15,11 +17,124 @@ from app.models.notification import Notification
 logger = logging.getLogger(__name__)
 
 
+DEMO_USERS_SPEC = [
+    {
+        "employee_id": "EMP001",
+        "full_name": "Alexander Hayes (Admin)",
+        "email": "admin@company.com",
+        "role": UserRole.ADMIN,
+        "department_code": "PM-CORP",
+        "designation": "System Administrator",
+        "manager_id": None,
+    },
+    {
+        "employee_id": "EMP002",
+        "full_name": "Marcus Vance",
+        "email": "manager@company.com",
+        "role": UserRole.MANAGER,
+        "department_code": "DEV-BE",
+        "designation": "Engineering Manager",
+        "manager_id": 1,
+    },
+    {
+        "employee_id": "EMP003",
+        "full_name": "Sarah Jenkins",
+        "email": "sarah.design@company.com",
+        "role": UserRole.MANAGER,
+        "department_code": "DES-UI",
+        "designation": "Lead UI/UX Designer",
+        "manager_id": 1,
+    },
+    {
+        "employee_id": "EMP004",
+        "full_name": "Alex Rivera",
+        "email": "alex.dev@company.com",
+        "role": UserRole.EMPLOYEE,
+        "department_code": "DEV-FE",
+        "designation": "Senior Frontend Engineer",
+        "manager_id": 2,
+    },
+    {
+        "employee_id": "EMP005",
+        "full_name": "David Chen",
+        "email": "david.backend@company.com",
+        "role": UserRole.EMPLOYEE,
+        "department_code": "DEV-BE",
+        "designation": "Senior Backend Engineer",
+        "manager_id": 2,
+    },
+    {
+        "employee_id": "EMP006",
+        "full_name": "Priya Sharma",
+        "email": "priya.qa@company.com",
+        "role": UserRole.EMPLOYEE,
+        "department_code": "QA-TEST",
+        "designation": "QA Automation Engineer",
+        "manager_id": 2,
+    },
+    {
+        "employee_id": "EMP007",
+        "full_name": "Elena Rostova",
+        "email": "elena.ai@company.com",
+        "role": UserRole.EMPLOYEE,
+        "department_code": "DEV-AI",
+        "designation": "AI/ML Engineer",
+        "manager_id": 2,
+    },
+]
+
+
+def sync_demo_accounts(db: Session):
+    """
+    Idempotent synchronization of development demo accounts.
+    Ensures standard demo accounts exist, have active status, and use
+    the bcrypt hash corresponding to settings.DEMO_ACCOUNT_PASSWORD.
+    Preserves all existing task assignments, comments, and project associations.
+    """
+    logger.info("[Database] Synchronizing demo accounts with configured DEMO_ACCOUNT_PASSWORD...")
+    demo_hashed_pwd = get_password_hash(settings.DEMO_ACCOUNT_PASSWORD)
+    synced_count = 0
+
+    dept_cache = {d.code: d.id for d in db.query(Department).all()}
+
+    for spec in DEMO_USERS_SPEC:
+        email = spec["email"].lower()
+        user = db.query(User).filter(func.lower(User.email) == email).first()
+        dept_id = dept_cache.get(spec["department_code"])
+
+        if user:
+            user.hashed_password = demo_hashed_pwd
+            user.is_active = True
+            if not user.designation:
+                user.designation = spec["designation"]
+            if not user.department_id and dept_id:
+                user.department_id = dept_id
+            synced_count += 1
+        else:
+            new_user = User(
+                employee_id=spec["employee_id"],
+                full_name=spec["full_name"],
+                email=spec["email"],
+                hashed_password=demo_hashed_pwd,
+                role=spec["role"],
+                department_id=dept_id,
+                designation=spec["designation"],
+                manager_id=spec["manager_id"],
+                is_active=True,
+                joining_date=date.today() - timedelta(days=180),
+            )
+            db.add(new_user)
+            synced_count += 1
+
+    db.commit()
+    logger.info(f"[Database] Successfully synchronized {synced_count} demo accounts.")
+
+
 def seed_database(db: Session):
     """Seed initial company departments, users, projects, and sample delegation workflows."""
     # Check if already seeded
     if db.query(User).first():
-        logger.info("[Database] Database already has users. Skipping seed.")
+        logger.info("[Database] Database already has users. Skipping full seed.")
         return
 
     logger.info("[Database] Seeding initial data...")
@@ -41,88 +156,16 @@ def seed_database(db: Session):
         db.flush()
         dept_map[d["code"]] = dept
 
-    # 2. Users
-    users_data = [
-        {
-            "employee_id": "EMP001",
-            "full_name": "Alexander Hayes (Admin)",
-            "email": "admin@company.com",
-            "password": "AdminPassword@123",
-            "role": UserRole.ADMIN,
-            "department_code": "PM-CORP",
-            "designation": "System Administrator",
-            "manager_id": None,
-        },
-        {
-            "employee_id": "EMP002",
-            "full_name": "Marcus Vance",
-            "email": "manager@company.com",
-            "password": "ManagerPassword@123",
-            "role": UserRole.MANAGER,
-            "department_code": "DEV-BE",
-            "designation": "Engineering Manager",
-            "manager_id": 1,
-        },
-        {
-            "employee_id": "EMP003",
-            "full_name": "Sarah Jenkins",
-            "email": "sarah.design@company.com",
-            "password": "SarahPassword@123",
-            "role": UserRole.MANAGER,
-            "department_code": "DES-UI",
-            "designation": "Lead UI/UX Designer",
-            "manager_id": 1,
-        },
-        {
-            "employee_id": "EMP004",
-            "full_name": "Alex Rivera",
-            "email": "alex.dev@company.com",
-            "password": "AlexPassword@123",
-            "role": UserRole.EMPLOYEE,
-            "department_code": "DEV-FE",
-            "designation": "Senior Frontend Engineer",
-            "manager_id": 2,
-        },
-        {
-            "employee_id": "EMP005",
-            "full_name": "David Chen",
-            "email": "david.backend@company.com",
-            "password": "DavidPassword@123",
-            "role": UserRole.EMPLOYEE,
-            "department_code": "DEV-BE",
-            "designation": "Senior Backend Engineer",
-            "manager_id": 2,
-        },
-        {
-            "employee_id": "EMP006",
-            "full_name": "Priya Sharma",
-            "email": "priya.qa@company.com",
-            "password": "PriyaPassword@123",
-            "role": UserRole.EMPLOYEE,
-            "department_code": "QA-TEST",
-            "designation": "QA Automation Engineer",
-            "manager_id": 2,
-        },
-        {
-            "employee_id": "EMP007",
-            "full_name": "Elena Rostova",
-            "email": "elena.ai@company.com",
-            "password": "ElenaPassword@123",
-            "role": UserRole.EMPLOYEE,
-            "department_code": "DEV-AI",
-            "designation": "AI/ML Engineer",
-            "manager_id": 2,
-        },
-    ]
-
+    # 2. Users with unified DEMO_ACCOUNT_PASSWORD
+    default_hash = get_password_hash(settings.DEMO_ACCOUNT_PASSWORD)
     user_objs = {}
-    for u in users_data:
+    for u in DEMO_USERS_SPEC:
         dept = dept_map.get(u["department_code"])
         user = User(
             employee_id=u["employee_id"],
             full_name=u["full_name"],
             email=u["email"],
-            hashed_password=get_password_hash(u["password"]),
+            hashed_password=default_hash,
             role=u["role"],
             department_id=dept.id if dept else None,
             designation=u["designation"],
@@ -414,3 +457,16 @@ def seed_database(db: Session):
 
     db.commit()
     logger.info("[Database] Seeding complete! Initial administrator, managers, employees, and sample workflows loaded.")
+
+
+if __name__ == "__main__":
+    from app.db.session import SessionLocal
+    logging.basicConfig(level=logging.INFO)
+    db = SessionLocal()
+    try:
+        seed_database(db)
+        sync_demo_accounts(db)
+    finally:
+        db.close()
+
+

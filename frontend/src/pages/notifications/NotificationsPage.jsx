@@ -129,3 +129,4 @@ export const NotificationsPage = () => {
     </div>
   );
 };
+

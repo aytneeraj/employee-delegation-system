@@ -17,3 +17,4 @@ class TaskUpdate(Base):
     # Relationships
     task = relationship("Task", back_populates="updates")
     user = relationship("User", back_populates="task_updates")
+

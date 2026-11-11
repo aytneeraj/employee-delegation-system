@@ -289,3 +289,4 @@ export const AllTasksPage = () => {
     </div>
   );
 };
+

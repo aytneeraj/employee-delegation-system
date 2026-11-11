@@ -162,3 +162,4 @@ Returns employee workload and throughput matrix.
 
 ### `GET /api/v1/reports/tasks`
 Returns task distributions by priority and status.
+

@@ -19,3 +19,4 @@ class TaskAssignment(Base):
     task = relationship("Task", back_populates="assignments")
     from_user = relationship("User", foreign_keys=[from_user_id])
     to_user = relationship("User", foreign_keys=[to_user_id])
+
